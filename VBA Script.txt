@@ -1,0 +1,135 @@
+'Assigning Variable
+
+
+Sub StockAnalysisMacro()
+
+        Dim ws As Worksheet
+        Dim lastrow As Long
+        Dim ticker As String
+        Dim openingprice As Double
+        Dim closingprice As Double
+        Dim yearlychange As Double
+        Dim percentchange As Double
+        Dim totalvolume As Double
+        Dim summaryrow As Integer
+        Dim maxpercentincrease As Double
+        Dim maxpercentdecrease As Double
+        Dim maxtotalvolume As Double
+        Dim maxpercentincreaseticker As String
+        Dim maxpercentdecreaseticker As String
+        Dim maxtotalvolumeticker As String
+        
+        
+        
+        
+'Yearly change from the opening price at the beginning of a given year to the closing price at the end of that year.
+
+For Each ws In ThisWorkbook.Worksheets
+    Select Case ws.Name
+        Case "A", "B", "C", "D", "E", "F"
+        lastrow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+        
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Volume"
+
+
+        summaryrow = 2
+        openingprice = ws.Cells(2, 3).Value
+        
+        
+        maxpercentincrease = 0
+        maxpercentdecrease = 0
+        maxtotalvolume = 0
+        
+        
+        For i = 2 To lastrow
+        
+            If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+            ticker = ws.Cells(i, 1).Value
+            closingprice = ws.Cells(i, 6).Value
+            yearlychange = closingprice - openingprice
+            totalvolume = WorksheetFunction.Sum(ws.Range(ws.Cells(i - 11, 7), ws.Cells(i, 7)))
+            
+        If openingprice <> 0 Then
+            percentchange = (yearlychange / openingprice) * 100
+            Else
+            percentchange = 0
+            End If
+            
+        
+'Write the output in Excel Sheets
+
+            ws.Cells(summaryrow, 9).Value = ticker
+            ws.Cells(summaryrow, 10).Value = yearlychange
+            ws.Cells(summaryrow, 11).NumberFormat = "0.00%"
+            ws.Cells(summaryrow, 11).Value = percentchange / 100
+            ws.Cells(summaryrow, 12).Value = totalvolume
+            
+            
+            
+            If percentchange > maxpercentincrease Then
+            maxpercentincrease = percentchange
+            maxpercentincreaseticker = ticker
+            End If
+            
+            If percentchange > maxpercentdecrease Then
+            maxpercentdecrease = percentchange
+            maxpercentdecreaseticker = ticker
+            End If
+            
+            
+            If totalvolume > maxtotalvolume Then
+            maxtotalvolume = totalvolume
+            maxtotalvolumeticker = ticker
+            End If
+
+
+            Dim targetrange As Range
+            Set targetrange = ws.Cells(summaryrow, 10)
+            
+            
+            targetrange.FormatConditions.Delete
+            
+            With targetrange.FormatConditions.Add(Type:=xlCellValue, Operator:=xlGreater, Formula1:="0")
+                .Interior.Color = RGB(0, 255, 0)
+                End With
+                
+            With targetrange.FormatConditions.Add(Type:=xlCellValue, Operator:=xlLess, Formula1:="0")
+                .Interior.Color = RGB(255, 0, 0)
+                End With
+                
+
+            summaryrow = summaryrow + 1
+            
+            openingprice = ws.Cells(i + 1, 3).Value
+        End If
+    Next i
+    
+    
+    
+'Add functionality to your script to return the stock with the "Greatest % increase", "Greatest % decrease", and "Greatest total volume".
+
+
+            ws.Cells(2, 15).Value = "Greatest % Increase"
+            ws.Cells(3, 15).Value = "Greatest % Decrease"
+            ws.Cells(4, 15).Value = "Greatest Total Volume"
+            
+            
+            ws.Cells(1, 16).Value = "Ticker"
+            ws.Cells(1, 17).Value = "Value"
+            
+            
+            ws.Cells(2, 16).Value = maxpercentincreaseticker
+            ws.Cells(2, 17).Value = maxpercentincrease & "%"
+            ws.Cells(3, 16).Value = maxpercentdecreaseticker
+            ws.Cells(3, 17).Value = maxpercentdecrease & "%"
+            ws.Cells(4, 16).Value = maxtotalvolumeticker
+            ws.Cells(4, 17).Value = maxtotalvolume
+        
+        End Select
+    Next ws
+
+
+End Sub
